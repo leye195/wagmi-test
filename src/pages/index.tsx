@@ -13,15 +13,25 @@ import type { NextPage } from "next";
 import styles from "../styles/Home.module.css";
 
 const Home: NextPage = () => {
-  const { signMessage } = useSignMessage({
+  const {
+    signMessage,
+    isLoading: signMessageLoading,
+    error: signMessageError,
+  } = useSignMessage({
     message: "wallet login",
+    onError(err) {
+      setError(err);
+      disconnect();
+    },
   });
-  const { connect, connectors, isConnecting, pendingConnector, error } =
-    useConnect({
-      onConnect() {
-        signMessage();
-      },
-    });
+  const { connect, connectors, isConnecting, pendingConnector } = useConnect({
+    onConnect() {
+      signMessage();
+    },
+    onError(err) {
+      setError(err);
+    },
+  });
   const { disconnect } = useDisconnect();
   const { data: account } = useAccount();
   const { activeChain, switchNetwork } = useNetwork();
@@ -30,6 +40,7 @@ const Home: NextPage = () => {
   });
 
   const [isMounted, setIsMounted] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -50,7 +61,7 @@ const Home: NextPage = () => {
       <main>
         <div className={styles.connectBlock}>
           <p>Wallet Connect with Wagmi</p>
-          {account && activeChain && (
+          {account && activeChain && !signMessageLoading && (
             <div>
               <p>Address: {account?.address}</p>
               <p>ChainId: {activeChain?.id}</p>
@@ -79,7 +90,7 @@ const Home: NextPage = () => {
                     " (connecting)"}
                 </button>
               ))}
-            {account && (
+            {account && !signMessageLoading && (
               <>
                 <button onClick={() => disconnect()}>Disconnect</button>
                 <button onClick={handleSwitch(1)}>Switch to Mainnet</button>
