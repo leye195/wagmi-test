@@ -8,6 +8,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@toruslabs/torus-embed": "^1.38.3",
     "ethers": "^5.6.8",
     "next": "12.1.6",
     "react": "18.1.0",
