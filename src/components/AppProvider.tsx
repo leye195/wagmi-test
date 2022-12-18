@@ -1,12 +1,14 @@
-import {
-  WagmiConfig,
-  createClient,
-  configureChains,
-  defaultChains,
-  chain,
-} from "wagmi";
+import { WagmiConfig, createClient, configureChains } from "wagmi";
 import { MetaMaskConnector } from "wagmi/connectors/metaMask";
 import { InjectedConnector } from "wagmi/connectors/injected";
+import {
+  polygon,
+  polygonMumbai,
+  mainnet,
+  goerli,
+  bsc,
+  bscTestnet,
+} from "wagmi/chains";
 import { publicProvider } from "wagmi/providers/public";
 
 type Props = {
@@ -14,12 +16,12 @@ type Props = {
 };
 
 const { chains, provider, webSocketProvider } = configureChains(
-  [...defaultChains, chain.polygonMumbai, chain.polygon],
+  [mainnet, goerli, polygon, polygonMumbai, bsc, bscTestnet],
   [publicProvider()]
 );
 
 const wagmiClient = createClient({
-  autoConnect: true,
+  autoConnect: false,
   connectors: [
     new MetaMaskConnector({
       chains,
