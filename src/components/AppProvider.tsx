@@ -1,6 +1,5 @@
 import { WagmiConfig, createClient, configureChains } from "wagmi";
-import { MetaMaskConnector } from "wagmi/connectors/metaMask";
-import { InjectedConnector } from "wagmi/connectors/injected";
+
 import {
   polygon,
   polygonMumbai,
@@ -10,6 +9,9 @@ import {
   bscTestnet,
 } from "wagmi/chains";
 import { publicProvider } from "wagmi/providers/public";
+import { MetaMaskConnector } from "wagmi/connectors/metaMask";
+import { InjectedConnector } from "wagmi/connectors/injected";
+import { ToursConnector } from "../connectors/torus";
 
 type Props = {
   children: React.ReactNode;
@@ -31,6 +33,12 @@ const wagmiClient = createClient({
       options: {
         name: "Injected",
         shimChainChangedDisconnect: false,
+      },
+    }),
+    new ToursConnector({
+      chains,
+      options: {
+        host: "mainnet",
       },
     }),
   ],

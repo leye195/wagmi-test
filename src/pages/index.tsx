@@ -110,16 +110,17 @@ const Home: NextPage = () => {
             {isConnected && !signMessageLoading && (
               <>
                 <button onClick={() => disconnect()}>Disconnect</button>
-                {chains.map((chain) => (
-                  <button
-                    key={`switch-${chain.id}`}
-                    onClick={handleSwitch(chain.id)}
-                    disabled={chain.id === activeChain?.id}
-                  >
-                    {chain.id === activeChain?.id && "(Current)"} Switch to{" "}
-                    {chain.name}
-                  </button>
-                ))}
+                {activeConnector?.name !== "torus" &&
+                  chains.map((chain) => (
+                    <button
+                      key={`switch-${chain.id}`}
+                      onClick={handleSwitch(chain.id)}
+                      disabled={chain.id === activeChain?.id}
+                    >
+                      {chain.id === activeChain?.id && "(Current)"} Switch to{" "}
+                      {chain.name}
+                    </button>
+                  ))}
               </>
             )}
           </div>
