@@ -2,10 +2,12 @@ import {
   Connector,
   useAccount,
   useBalance,
+  useBlockNumber,
   useConnect,
   useDisconnect,
   useNetwork,
   useSignMessage,
+  useSwitchNetwork,
 } from "wagmi";
 import { useEffect, useState } from "react";
 import type { NextPage } from "next";
@@ -13,30 +15,36 @@ import type { NextPage } from "next";
 import styles from "../styles/Home.module.css";
 
 const Home: NextPage = () => {
-  const {
-    signMessage,
-    isLoading: signMessageLoading,
-    error: signMessageError,
-  } = useSignMessage({
-    message: "wallet login",
-    onError(err) {
-      setError(err);
-      disconnect();
-    },
-  });
-  const { connect, connectors, isConnecting, pendingConnector } = useConnect({
-    onConnect() {
+  const { connect, connectors, pendingConnector, reset } = useConnect({
+    onSuccess() {
       signMessage();
     },
     onError(err) {
       setError(err);
+      reset();
     },
   });
-  const { disconnect } = useDisconnect();
-  const { data: account } = useAccount();
-  const { activeChain, switchNetwork } = useNetwork();
-  const { data: balance, isLoading } = useBalance({
-    addressOrName: account?.address,
+  const { disconnect } = useDisconnect({
+    onSuccess() {
+      reset();
+    },
+  });
+
+  const { address, isConnected, connector: activeConnector } = useAccount();
+  const { chain: activeChain } = useNetwork();
+  const { chains, switchNetwork } = useSwitchNetwork();
+  const { data: balance, isLoading: isBalanceLoading } = useBalance({
+    address,
+  });
+  const { data: blockData, isLoading: isBlockLoading } = useBlockNumber({
+    watch: true,
+  });
+  const { signMessage, isLoading: signMessageLoading } = useSignMessage({
+    message: "Wallet Login Message",
+    onError() {
+      reset();
+      disconnect();
+    },
   });
 
   const [isMounted, setIsMounted] = useState(false);
@@ -47,7 +55,7 @@ const Home: NextPage = () => {
   }, []);
 
   const handleConnect = (connector: Connector) => () => {
-    connect(connector);
+    connect({ connector });
   };
 
   const handleSwitch = (id: number) => () => {
@@ -61,15 +69,23 @@ const Home: NextPage = () => {
       <main>
         <div className={styles.connectBlock}>
           <p>Wallet Connect with Wagmi</p>
-          {account && activeChain && !signMessageLoading && (
+          {activeChain && isConnected && !signMessageLoading && (
+            <p>
+              {isBlockLoading
+                ? "Fetching Block Number..."
+                : `Current Block Number on ${activeChain?.name}: ${blockData}`}
+            </p>
+          )}
+          {address && activeChain && !signMessageLoading && (
             <div>
-              <p>Address: {account?.address}</p>
+              <p>Connected to {activeConnector?.name}</p>
+              <p>Address: {address}</p>
               <p>ChainId: {activeChain?.id}</p>
               <p>Network: {activeChain?.name}</p>
               <p>
                 Balance:{" "}
-                {isLoading
-                  ? "Loading"
+                {isBalanceLoading
+                  ? "Balance Loading"
                   : `${Number(balance?.formatted).toFixed(4)}  ${
                       balance?.symbol
                     }`}
@@ -77,25 +93,33 @@ const Home: NextPage = () => {
             </div>
           )}
           <div className={styles.buttonGroup}>
-            {!account &&
+            {(!isConnected || signMessageLoading) &&
               connectors.map((connector) => (
                 <button
                   className={styles.connectButton}
                   key={connector.id}
                   onClick={handleConnect(connector)}
+                  disabled={!connector.ready || !!pendingConnector}
                 >
                   {connector.name}
-                  {isConnecting &&
+                  {signMessageLoading &&
                     pendingConnector?.id === connector.id &&
                     " (connecting)"}
                 </button>
               ))}
-            {account && !signMessageLoading && (
+            {isConnected && !signMessageLoading && (
               <>
                 <button onClick={() => disconnect()}>Disconnect</button>
-                <button onClick={handleSwitch(1)}>Switch to Mainnet</button>
-                <button onClick={handleSwitch(3)}>Switch to Ropsten</button>
-                <button onClick={handleSwitch(80001)}>Switch to Mumbai</button>
+                {chains.map((chain) => (
+                  <button
+                    key={`switch-${chain.id}`}
+                    onClick={handleSwitch(chain.id)}
+                    disabled={chain.id === activeChain?.id}
+                  >
+                    {chain.id === activeChain?.id && "(Current)"} Switch to{" "}
+                    {chain.name}
+                  </button>
+                ))}
               </>
             )}
           </div>
