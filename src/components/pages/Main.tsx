@@ -23,7 +23,6 @@ const Main = () => {
           isOpen={isOpen}
           handleOpen={handleOpen}
           backdrop="blur"
-          placement="bottom"
         />
       </Portal>
       {active && <Button onClick={() => disconnect()}>Disconnect</Button>}
