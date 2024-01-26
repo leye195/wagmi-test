@@ -1,29 +1,31 @@
 "use client";
 
-import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { useConnect } from "wagmi";
 import { useWeb3Modal } from "@web3modal/wagmi1/react";
-import WalletOption from "@/components/WalletOption";
+import WalletOption from "@/components/wallet/WalletOption";
+import { useState } from "react";
 
 const WalletList = () => {
-  const { address, isConnected } = useAccount();
-  const { connectors, connect } = useConnect();
+  const [selected, setSelected] = useState<string | null>(null);
+  const { connectors, connect } = useConnect({
+    onMutate: ({ connector }) => {
+      setSelected(connector.id);
+    },
+    onSettled: () => {
+      setSelected(null);
+    },
+  });
   const { open } = useWeb3Modal();
-  const { disconnect } = useDisconnect();
 
   return (
-    <div className="flex flex-col items-center gap-2 max-x-[400px] w-full">
-      {isConnected && (
-        <div className="text-center">
-          <p>address: {address}</p>
-          <button onClick={() => disconnect()}>Disconnect</button>
-        </div>
-      )}
+    <div className="flex flex-col justify-center items-center gap-2 w-full">
       {connectors
         .filter(({ id }) => id !== "injected" && id !== "eip6963")
         .map((connector) => (
           <WalletOption
             key={connector.name}
             connector={connector}
+            selected={selected}
             onClick={() =>
               connector.id === "walletConnect" ? open() : connect({ connector })
             }
