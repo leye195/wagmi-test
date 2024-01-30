@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import WalletModal from "../wallet/WalletModal";
-import Button from "../common/Button";
 import useWallet from "@/hooks/useWallet";
-import Portal from "../Portal";
+import WalletModal from "@/components/wallet/WalletModal";
+import Button from "@/components/common/Button";
+import Portal from "@/components/Portal";
 
 const Main = () => {
   const [isOpen, setIsOpen] = useState(false);
